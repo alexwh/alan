@@ -5,6 +5,7 @@ import socket
 import select
 import signal
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QThread
 from qhexedit import QHexEdit
 from socketserver import ThreadingTCPServer, StreamRequestHandler
 
@@ -37,6 +38,26 @@ class TCPProxy(StreamRequestHandler):
                 if client.send(data) <= 0:
                     break
 
+class TCPServer(QThread):
+    def __init__(self, local_ip, local_port, remote_ip, remote_port):
+        QThread.__init__(self)
+        self.local_ip = local_ip
+        self.local_port = local_port
+        self.remote_ip = remote_ip
+        self.remote_port = remote_port
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        with ThreadingTCPServer((self.local_ip, self.local_port), TCPProxy) as self.server:
+            self.server.remote_ip = self.remote_ip
+            self.server.remote_port = self.remote_port
+            self.server.client_data = bytes()
+            self.server.remote_data = bytes()
+            self.server.handle_request()
+
+
 class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -55,12 +76,8 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         remote_port = int(self.remote_port.toPlainText())
 
         logging.info(f"listening on {local_ip}:{local_port}")
-        with ThreadingTCPServer((local_ip, local_port), TCPProxy) as self.server:
-            self.server.remote_ip = remote_ip
-            self.server.remote_port = remote_port
-            self.server.client_data = bytes()
-            self.server.remote_data = bytes()
-            self.server.handle_request()
+        self.tcp_server_thread = TCPServer(local_ip, local_port, remote_ip, remote_port)
+        self.tcp_server_thread.start()
 
 
 def main():
