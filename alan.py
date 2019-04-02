@@ -11,6 +11,7 @@ from socketserver import ThreadingTCPServer, StreamRequestHandler
 
 import design
 
+# these classes are redundantly abstracted, combine them
 class TCPProxy(StreamRequestHandler):
     def handle(self):
         logging.info("recieved connection at {}:{}".format(*self.connection.getpeername()))
@@ -58,7 +59,7 @@ class TCPServer(QThread):
             self.server.handle_request()
 
 
-class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
+class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -83,7 +84,7 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 def main():
     logging.basicConfig(level=logging.DEBUG)
     app = QtWidgets.QApplication(sys.argv)
-    form = ExampleApp()
+    form = AlanApp()
     form.show()
     sys.exit(app.exec_())
 
