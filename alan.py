@@ -68,10 +68,6 @@ def main():
     form.show()
     sys.exit(app.exec_())
 
-def handle_signal(sig, frame):
-    logging.info("exiting")
-    sys.exit(0)
-
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     main()
