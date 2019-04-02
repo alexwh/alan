@@ -42,16 +42,17 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.he = QHexEdit()
-        self.pushButton.clicked.connect(self.hexedit)
+        self.pushButton.clicked.connect(self.tcp_handle)
 
-    def hexedit(self):
+    def hexedit(self, data):
+        self.he.setData(data)
         self.he.show()
 
     def tcp_handle(self):
-        local_ip = self.listen_ip.text()
-        local_port = self.listen_port.text()
-        remote_ip = self.remote_ip.text()
-        remote_port = self.remote_port.text()
+        local_ip = self.listen_ip.toPlainText()
+        local_port = int(self.listen_port.toPlainText())
+        remote_ip = self.remote_ip.toPlainText()
+        remote_port = int(self.remote_port.toPlainText())
 
         logging.info(f"listening on {local_ip}:{local_port}")
         with ThreadingTCPServer((local_ip, local_port), TCPProxy) as self.server:
