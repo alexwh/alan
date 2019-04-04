@@ -11,34 +11,6 @@ from socketserver import ThreadingTCPServer, StreamRequestHandler
 
 import design
 
-# these classes are redundantly abstracted, combine them
-class TCPProxy(StreamRequestHandler):
-    def handle(self):
-        logging.info("recieved connection at {}:{}".format(*self.connection.getpeername()))
-        remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        logging.info(f"connecting to remote: {self.server.remote_ip}:{self.server.remote_port}")
-        remote.connect((self.server.remote_ip, self.server.remote_port))
-        self.exchange(self.connection, remote)
-
-    def exchange(self, client, remote):
-        while True:
-            # wait until client or remote is available for read
-            readable, _, _ = select.select([client, remote], [], [])
-
-            if client in readable:
-                data = client.recv(4096)
-                logging.debug(f"reading client data: {data}")
-                self.server.client_data += data
-                if remote.send(data) <= 0:
-                    break
-
-            if remote in readable:
-                data = remote.recv(4096)
-                logging.debug(f"reading remote data: {data}")
-                self.server.remote_data += data
-                if client.send(data) <= 0:
-                    break
-
 class TCPServer(QThread):
     def __init__(self, app, local_ip, local_port, remote_ip, remote_port):
         QThread.__init__(self)
@@ -46,19 +18,52 @@ class TCPServer(QThread):
         self.local_port = local_port
         self.remote_ip = remote_ip
         self.remote_port = remote_port
+        self.client_data = bytes()
+        self.server_data = bytes()
         self.app = app
 
     def __del__(self):
         self.wait()
 
+    def _exchange_data(self, client, remote):
+        while True:
+            # wait until client or remote is available for read
+            readable, _, _ = select.select([client, remote], [], [])
+
+            if client in readable:
+                data = client.recv(4096)
+                logging.debug(f"reading client data: {data}")
+                self.client_data += data
+                if remote.send(data) <= 0:
+                    break
+
+            if remote in readable:
+                data = remote.recv(4096)
+                logging.debug(f"reading remote data: {data}")
+                self.remote_data += data
+                if client.send(data) <= 0:
+                    break
+
     def run(self):
-        with ThreadingTCPServer((self.local_ip, self.local_port), TCPProxy) as self.app.server:
-            self.app.server.remote_ip = self.remote_ip
-            self.app.server.remote_port = self.remote_port
-            self.app.server.client_data = bytes()
-            self.app.server.remote_data = bytes()
-            self.app.server.handle_request()
-        self.app.hexedit(self.app.server.client_data)
+        self.client_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client_conn.bind((self.local_ip, self.local_port))
+        self.client_conn.listen()
+        conn, addr = self.client_conn.accept()
+        logging.info("recieved connection at {}:{}".format(*conn.getpeername()))
+
+        self.remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        logging.info(f"connecting to remote: {self.remote_ip}:{self.remote_port}")
+        self.remote_conn.connect((self.remote_ip, self.remote_port))
+
+        self._exchange_data(conn, self.remote_conn)
+
+        # with ThreadingTCPServer((self.local_ip, self.local_port), TCPProxy) as self.app.server:
+        #     self.app.server.remote_ip = self.remote_ip
+        #     self.app.server.remote_port = self.remote_port
+        #     self.app.server.client_data = bytes()
+        #     self.app.server.remote_data = bytes()
+        #     self.app.server.handle_request()
+        self.app.hexedit(self.client_data)
 
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
