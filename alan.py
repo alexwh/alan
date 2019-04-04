@@ -7,7 +7,6 @@ import signal
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QThread
 from qhexedit import QHexEdit
-from socketserver import ThreadingTCPServer, StreamRequestHandler
 
 import design
 
@@ -56,13 +55,6 @@ class TCPServer(QThread):
         self.remote_conn.connect((self.remote_ip, self.remote_port))
 
         self._exchange_data(conn, self.remote_conn)
-
-        # with ThreadingTCPServer((self.local_ip, self.local_port), TCPProxy) as self.app.server:
-        #     self.app.server.remote_ip = self.remote_ip
-        #     self.app.server.remote_port = self.remote_port
-        #     self.app.server.client_data = bytes()
-        #     self.app.server.remote_data = bytes()
-        #     self.app.server.handle_request()
         self.app.hexedit(self.client_data)
 
 
