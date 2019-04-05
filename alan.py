@@ -4,6 +4,7 @@ import logging
 import socket
 import select
 import signal
+import time
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from qhexedit import QHexEdit
@@ -32,7 +33,11 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading client data: {data}")
                     self.app.sig.recv_data.emit(data, "client")
-                    if remote.send(data) < 0:
+                    while self.app.client_intercept_checkbox.isChecked():
+                        time.sleep(0.1)
+
+                    logging.debug(f"sending client data to remote: {self.app.client_data}")
+                    if remote.send(self.app.client_data) < 0:
                         logging.debug("error sending to remote")
                         break
                 else:
@@ -44,7 +49,11 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading remote data: {data}")
                     self.app.sig.recv_data.emit(data, "remote")
-                    if client.send(data) < 0:
+                    while self.app.remote_intercept_checkbox.isChecked():
+                        time.sleep(0.1)
+
+                    logging.debug(f"sending remote data to client: {self.app.remote_data}")
+                    if client.send(self.app.remote_data) < 0:
                         logging.debug("error sending to client")
                         break
                 else:
