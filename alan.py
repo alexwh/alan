@@ -44,17 +44,22 @@ class TCPServer(QThread):
                     break
 
     def run(self):
-        self.client_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_conn.bind((self.local_ip, self.local_port))
-        self.client_conn.listen()
-        conn, addr = self.client_conn.accept()
-        logging.info("recieved connection at {}:{}".format(*conn.getpeername()))
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            server.bind((self.local_ip, self.local_port))
+        except OSError:
+            QtWidgets.QMessageBox.critical(self.app, "Binding error",
+                                           f"Could not bind to local port: {self.local_port}",
+                                           QtWidgets.QMessageBox.Ok)
+        server.listen()
+        client_conn, addr = server.accept()
+        logging.info("recieved connection at {}:{}".format(*client_conn.getpeername()))
 
         self.remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         logging.info(f"connecting to remote: {self.remote_ip}:{self.remote_port}")
         self.remote_conn.connect((self.remote_ip, self.remote_port))
 
-        self._exchange_data(conn, self.remote_conn)
+        self._exchange_data(client_conn, self.remote_conn)
         self.app.hexedit(self.client_data)
 
 
