@@ -42,6 +42,7 @@ class TCPServer(QThread):
                     break
 
     def run(self):
+        self.app.sig.button_state.emit(False)
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             server.bind((self.local_ip, self.local_port))
@@ -59,11 +60,13 @@ class TCPServer(QThread):
         self.remote_conn.connect((self.remote_ip, self.remote_port))
 
         self._exchange_data(client_conn, self.remote_conn)
+        self.app.sig.button_state.emit(True)
 
 
 class AlanSignal(QObject):
     handle_error = pyqtSignal(str, str, name='handle_error')
     recv_data = pyqtSignal(bytes, str, name='recv_data')
+    button_state = pyqtSignal(bool, name='button_state')
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -78,6 +81,7 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.sig.handle_error.connect(self.showerror)
         self.sig.recv_data.connect(self.receive_data)
+        self.sig.button_state.connect(self.update_button)
 
         self.go_button.clicked.connect(self.tcp_handle)
 
@@ -96,7 +100,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         else:
             return
 
-        self.hexedit(data)
+    def update_button(self, state):
+        self.go_button.setEnabled(state)
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
