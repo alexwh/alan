@@ -54,11 +54,11 @@ class TCPServer(QThread):
         client_conn, addr = server.accept()
         logging.info("recieved connection at {}:{}".format(*client_conn.getpeername()))
 
-        self.remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         logging.info(f"connecting to remote: {self.remote_ip}:{self.remote_port}")
-        self.remote_conn.connect((self.remote_ip, self.remote_port))
+        remote_conn.connect((self.remote_ip, self.remote_port))
 
-        self._exchange_data(client_conn, self.remote_conn)
+        self._exchange_data(client_conn, remote_conn)
 
 
 class AlanSignal(QObject):
