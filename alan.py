@@ -17,8 +17,6 @@ class TCPServer(QThread):
         self.local_port = local_port
         self.remote_ip = remote_ip
         self.remote_port = remote_port
-        self.client_data = bytes()
-        self.server_data = bytes()
         self.app = app
 
     def __del__(self):
@@ -32,14 +30,14 @@ class TCPServer(QThread):
             if client in readable:
                 data = client.recv(4096)
                 logging.debug(f"reading client data: {data}")
-                self.client_data += data
+                self.app.sig.recv_data.emit(data, "client")
                 if remote.send(data) <= 0:
                     break
 
             if remote in readable:
                 data = remote.recv(4096)
                 logging.debug(f"reading remote data: {data}")
-                self.remote_data += data
+                self.app.sig.recv_data.emit(data, "server")
                 if client.send(data) <= 0:
                     break
 
@@ -61,20 +59,26 @@ class TCPServer(QThread):
         self.remote_conn.connect((self.remote_ip, self.remote_port))
 
         self._exchange_data(client_conn, self.remote_conn)
-        self.app.hexedit(self.client_data)
 
 
 class AlanSignal(QObject):
     handle_error = pyqtSignal(str, str, name='handle_error')
+    recv_data = pyqtSignal(bytes, str, name='recv_data')
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+
         self.he = QHexEdit()
-        self.pushButton.clicked.connect(self.tcp_handle)
+        self.client_data = bytes()
+        self.server_data = bytes()
         self.sig = AlanSignal()
+
         self.sig.handle_error.connect(self.showerror)
+        self.sig.recv_data.connect(self.receive_data)
+
+        self.pushButton.clicked.connect(self.tcp_handle)
 
     def hexedit(self, data):
         self.he.setData(data)
@@ -82,6 +86,16 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def showerror(self, title, message, buttons=QtWidgets.QMessageBox.Ok):
         QtWidgets.QMessageBox.critical(self, title, message, buttons)
+
+    def receive_data(self, data, direction):
+        if direction == "client":
+            self.client_data += data
+        elif direction == "server":
+            self.server_data += data
+        else:
+            return
+
+        self.hexedit(data)
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
