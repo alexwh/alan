@@ -31,7 +31,7 @@ class TCPServer(QThread):
                 data = client.recv(4096)
                 if data:
                     logging.debug(f"reading client data: {data}")
-                    self.app.sig.recv_data.emit(data, "client", False)
+                    self.app.sig.recv_data.emit(data, "client")
                     if remote.send(data) <= 0:
                         break
                 else:
@@ -42,7 +42,7 @@ class TCPServer(QThread):
                 data = remote.recv(4096)
                 if data:
                     logging.debug(f"reading remote data: {data}")
-                    self.app.sig.recv_data.emit(data, "remote", False)
+                    self.app.sig.recv_data.emit(data, "remote")
                     if client.send(data) <= 0:
                         break
                 else:
@@ -71,7 +71,7 @@ class TCPServer(QThread):
 
 class AlanSignal(QObject):
     handle_error = pyqtSignal(str, str, name='handle_error')
-    recv_data = pyqtSignal(bytes, str, bool, name='recv_data')
+    recv_data = pyqtSignal(bytes, str, name='recv_data')
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -103,15 +103,11 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def update_remote_data(self):
         self.remote_data = self.remote_hexedit.data()
 
-    def receive_data(self, data, direction, overwrite=False):
+    def receive_data(self, data, direction):
         if direction == "client":
-            if overwrite:
-                self.client_data = bytes()
             self.client_data += data
             self.client_hexedit.setData(self.client_data)
         elif direction == "remote":
-            if overwrite:
-                self.remote_data = bytes()
             self.remote_data += data
             self.remote_hexedit.setData(self.remote_data)
         else:
