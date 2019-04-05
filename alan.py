@@ -114,8 +114,6 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def finished(self):
         self.go_button.setEnabled(True)
-        self.client_data = bytes()
-        self.remote_data = bytes()
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
