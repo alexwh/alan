@@ -50,6 +50,7 @@ class TCPServer(QThread):
         except OSError:
             self.app.sig.handle_error.emit("Binding error",
                                            f"Could not bind to local port: {self.local_port}")
+            return
 
         server.listen()
         client_conn, addr = server.accept()
