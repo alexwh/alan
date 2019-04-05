@@ -72,6 +72,11 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.client_hexedit = QHexEdit()
         self.remote_hexedit = QHexEdit()
+        self.client_hexedit_layout = QtWidgets.QVBoxLayout(self.client_hexedit_tab)
+        self.remote_hexedit_layout = QtWidgets.QVBoxLayout(self.remote_hexedit_tab)
+        self.client_hexedit_layout.addWidget(self.client_hexedit)
+        self.remote_hexedit_layout.addWidget(self.remote_hexedit)
+
         self.client_data = bytes()
         self.remote_data = bytes()
         self.sig = AlanSignal()
@@ -90,13 +95,11 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
                 self.client_data = bytes()
             self.client_data += data
             self.client_hexedit.setData(self.client_data)
-            self.client_hexedit.show()
         elif direction == "remote":
             if overwrite:
                 self.remote_data = bytes()
             self.remote_data += data
             self.remote_hexedit.setData(self.remote_data)
-            self.remote_hexedit.show()
         else:
             return
 
@@ -107,8 +110,6 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.go_button.setEnabled(True)
         self.client_data = bytes()
         self.remote_data = bytes()
-        self.client_hexedit.close()
-        self.remote_hexedit.close()
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
