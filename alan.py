@@ -70,7 +70,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
 
-        self.he = QHexEdit()
+        self.client_hexedit = QHexEdit()
+        self.remote_hexedit = QHexEdit()
         self.client_data = bytes()
         self.remote_data = bytes()
         self.sig = AlanSignal()
@@ -78,11 +79,7 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.sig.handle_error.connect(self.showerror)
         self.sig.recv_data.connect(self.receive_data)
 
-        self.pushButton.clicked.connect(self.tcp_handle)
-
-    def hexedit(self, data):
-        self.he.setData(data)
-        self.he.show()
+        self.go_button.clicked.connect(self.tcp_handle)
 
     def showerror(self, title, message, buttons=QtWidgets.QMessageBox.Ok):
         QtWidgets.QMessageBox.critical(self, title, message, buttons)
@@ -90,8 +87,12 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def receive_data(self, data, direction):
         if direction == "client":
             self.client_data += data
+            self.client_hexedit.setData(self.client_data)
+            self.client_hexedit.show()
         elif direction == "remote":
             self.remote_data += data
+            self.remote_hexedit.setData(self.remote_data)
+            self.remote_hexedit.show()
         else:
             return
 

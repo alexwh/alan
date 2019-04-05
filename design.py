@@ -41,9 +41,9 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(self.centralWidget)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.pushButton = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton.setObjectName("pushButton")
-        self.gridLayout.addWidget(self.pushButton, 2, 0, 1, 3)
+        self.go_button = QtWidgets.QPushButton(self.centralWidget)
+        self.go_button.setObjectName("go_button")
+        self.gridLayout.addWidget(self.go_button, 2, 0, 1, 3)
         self.listen_port = QtWidgets.QPlainTextEdit(self.centralWidget)
         self.listen_port.setMaximumSize(QtCore.QSize(70, 32))
         self.listen_port.setObjectName("listen_port")
@@ -61,7 +61,7 @@ class Ui_MainWindow(object):
         self.remote_ip.setPlainText(_translate("MainWindow", "127.0.0.1"))
         self.listen_ip.setPlainText(_translate("MainWindow", "127.0.0.1"))
         self.label.setText(_translate("MainWindow", "Listen IP"))
-        self.pushButton.setText(_translate("MainWindow", "go"))
+        self.go_button.setText(_translate("MainWindow", "go"))
         self.listen_port.setPlainText(_translate("MainWindow", "10000"))
 
 
