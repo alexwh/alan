@@ -37,7 +37,7 @@ class TCPServer(QThread):
             if remote in readable:
                 data = remote.recv(4096)
                 logging.debug(f"reading remote data: {data}")
-                self.app.sig.recv_data.emit(data, "server")
+                self.app.sig.recv_data.emit(data, "remote")
                 if client.send(data) <= 0:
                     break
 
@@ -72,7 +72,7 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.he = QHexEdit()
         self.client_data = bytes()
-        self.server_data = bytes()
+        self.remote_data = bytes()
         self.sig = AlanSignal()
 
         self.sig.handle_error.connect(self.showerror)
@@ -90,8 +90,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def receive_data(self, data, direction):
         if direction == "client":
             self.client_data += data
-        elif direction == "server":
-            self.server_data += data
+        elif direction == "remote":
+            self.remote_data += data
         else:
             return
 
