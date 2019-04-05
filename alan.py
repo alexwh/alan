@@ -32,7 +32,8 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading client data: {data}")
                     self.app.sig.recv_data.emit(data, "client")
-                    if remote.send(data) <= 0:
+                    if remote.send(data) < 0:
+                        logging.debug("error sending to remote")
                         break
                 else:
                     logging.debug("done with recv in client")
@@ -43,7 +44,8 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading remote data: {data}")
                     self.app.sig.recv_data.emit(data, "remote")
-                    if client.send(data) <= 0:
+                    if client.send(data) < 0:
+                        logging.debug("error sending to client")
                         break
                 else:
                     logging.debug("done with recv in remote")
