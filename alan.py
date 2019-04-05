@@ -29,16 +29,24 @@ class TCPServer(QThread):
 
             if client in readable:
                 data = client.recv(4096)
-                logging.debug(f"reading client data: {data}")
-                self.app.sig.recv_data.emit(data, "client", False)
-                if remote.send(data) <= 0:
+                if data:
+                    logging.debug(f"reading client data: {data}")
+                    self.app.sig.recv_data.emit(data, "client", False)
+                    if remote.send(data) <= 0:
+                        break
+                else:
+                    logging.debug("done with recv in client")
                     break
 
             if remote in readable:
                 data = remote.recv(4096)
-                logging.debug(f"reading remote data: {data}")
-                self.app.sig.recv_data.emit(data, "remote", False)
-                if client.send(data) <= 0:
+                if data:
+                    logging.debug(f"reading remote data: {data}")
+                    self.app.sig.recv_data.emit(data, "remote", False)
+                    if client.send(data) <= 0:
+                        break
+                else:
+                    logging.debug("done with recv in remote")
                     break
 
     def run(self):
