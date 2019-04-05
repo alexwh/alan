@@ -72,8 +72,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.client_hexedit = QHexEdit()
         self.remote_hexedit = QHexEdit()
-        self.client_hexedit_layout = QtWidgets.QVBoxLayout(self.client_hexedit_tab)
-        self.remote_hexedit_layout = QtWidgets.QVBoxLayout(self.remote_hexedit_tab)
+        self.client_hexedit.dataChanged.connect(self.update_client_data)
+        self.remote_hexedit.dataChanged.connect(self.update_remote_data)
         self.client_hexedit_layout.addWidget(self.client_hexedit)
         self.remote_hexedit_layout.addWidget(self.remote_hexedit)
 
@@ -88,6 +88,12 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def showerror(self, title, message, buttons=QtWidgets.QMessageBox.Ok):
         QtWidgets.QMessageBox.critical(self, title, message, buttons)
+
+    def update_client_data(self):
+        self.receive_data(self.client_hexedit.data(), "client", True)
+
+    def update_remote_data(self):
+        self.receive_data(self.remote_hexedit.data(), "remote", True)
 
     def receive_data(self, data, direction, overwrite=False):
         if direction == "client":
