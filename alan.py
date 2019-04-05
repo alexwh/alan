@@ -5,7 +5,7 @@ import socket
 import select
 import signal
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from qhexedit import QHexEdit
 
 import design
@@ -48,9 +48,9 @@ class TCPServer(QThread):
         try:
             server.bind((self.local_ip, self.local_port))
         except OSError:
-            QtWidgets.QMessageBox.critical(self.app, "Binding error",
-                                           f"Could not bind to local port: {self.local_port}",
-                                           QtWidgets.QMessageBox.Ok)
+            self.app.sig.handle_error.emit("Binding error",
+                                           f"Could not bind to local port: {self.local_port}")
+
         server.listen()
         client_conn, addr = server.accept()
         logging.info("recieved connection at {}:{}".format(*client_conn.getpeername()))
@@ -63,16 +63,24 @@ class TCPServer(QThread):
         self.app.hexedit(self.client_data)
 
 
+class AlanSignal(QObject):
+    handle_error = pyqtSignal(str, str, name='handle_error')
+
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.he = QHexEdit()
         self.pushButton.clicked.connect(self.tcp_handle)
+        self.sig = AlanSignal()
+        self.sig.handle_error.connect(self.showerror)
 
     def hexedit(self, data):
         self.he.setData(data)
         self.he.show()
+
+    def showerror(self, title, message, buttons=QtWidgets.QMessageBox.Ok):
+        QtWidgets.QMessageBox.critical(self, title, message, buttons)
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
@@ -80,7 +88,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         remote_ip = self.remote_ip.toPlainText()
         remote_port = int(self.remote_port.toPlainText())
 
-        logging.info(f"listening on {local_ip}:{local_port}")
+        logging.info(f"starting listen thread on {local_ip}:{local_port}")
+
         self.tcp_server_thread = TCPServer(self, local_ip, local_port, remote_ip, remote_port)
         self.tcp_server_thread.start()
 
