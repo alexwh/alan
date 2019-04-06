@@ -4,9 +4,8 @@ import logging
 import socket
 import select
 import signal
-import time
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject
+from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from qhexedit import QHexEdit
 
 import design
@@ -59,9 +58,8 @@ class TCPServer(QThread):
 
         logging.debug(f"sending {data} to {direction}")
         if sock.send(data) <= 0:
+            self.app.sig.clear_data.emit(direction)
             logging.debug(f"error sending to {direction}")
-        # while self.app.remote_intercept_checkbox.isChecked():
-        #     time.sleep(0.1)
 
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -87,6 +85,7 @@ class AlanSignal(QObject):
     handle_error = pyqtSignal(str, str, name='handle_error')
     recv_data = pyqtSignal(bytes, str, name='recv_data')
     send_data = pyqtSignal(bytes, str, name='send_data')
+    clear_data = pyqtSignal(str, name='clear_data')
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -109,6 +108,7 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.sig.handle_error.connect(self.showerror)
         self.sig.recv_data.connect(self.receive_data)
+        self.sig.clear_data.connect(self.clear_data)
 
         self.go_button.clicked.connect(self.tcp_handle)
         self.client_send_button.clicked.connect(self.send_client)
@@ -120,10 +120,14 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def update_client_data(self):
         self.client_data = self.client_hexedit.data()
         self.tabs.setTabText(self.tabs.indexOf(self.client_hexedit_tab), "Client Data (*)")
+        if not self.client_intercept_checkbox.isChecked():
+            self.send_client()
 
     def update_remote_data(self):
         self.remote_data = self.remote_hexedit.data()
         self.tabs.setTabText(self.tabs.indexOf(self.remote_hexedit_tab), "Remote Data (*)")
+        if not self.remote_intercept_checkbox.isChecked():
+            self.send_remote()
 
     def tab_changed(self, index):
         if index == self.tabs.indexOf(self.client_hexedit_tab):
@@ -139,6 +143,16 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             self.remote_data += data
             self.remote_hexedit.setData(self.remote_data)
         else:
+            logging.error("invalid direction in receive_data")
+            return
+
+    def clear_data(self, direction):
+        if direction == "client":
+            self.client_data = bytes()
+        elif direction == "remote":
+            self.remote_data = bytes()
+        else:
+            logging.error("invalid direction in clear_data")
             return
 
     def started(self):
