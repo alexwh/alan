@@ -54,7 +54,9 @@ class TCPServer(QThread):
         elif direction == "remote":
             sock = self.client_conn
         else:
+            logging.error("invalid direction in send_data")
             return
+
         logging.debug(f"sending {data} to {direction}")
         if sock.send(data) <= 0:
             logging.debug(f"error sending to {direction}")
