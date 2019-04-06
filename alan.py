@@ -37,7 +37,7 @@ class TCPServer(QThread):
                         time.sleep(0.1)
 
                     logging.debug(f"sending client data to remote: {self.app.client_data}")
-                    if remote.send(self.app.client_data) < 0:
+                    if remote.send(self.app.client_data) <= 0:
                         logging.debug("error sending to remote")
                         break
                 else:
@@ -53,7 +53,7 @@ class TCPServer(QThread):
                         time.sleep(0.1)
 
                     logging.debug(f"sending remote data to client: {self.app.remote_data}")
-                    if client.send(self.app.remote_data) < 0:
+                    if client.send(self.app.remote_data) <= 0:
                         logging.debug("error sending to client")
                         break
                 else:
@@ -64,9 +64,9 @@ class TCPServer(QThread):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             server.bind((self.local_ip, self.local_port))
-        except OSError:
+        except OSError as err:
             self.app.sig.handle_error.emit("Binding error",
-                                           f"Could not bind to local port: {self.local_port}")
+                                           f"Could not bind to local port: {self.local_port}\n{err}")
             return
 
         server.listen()
@@ -91,6 +91,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
         self.client_hexedit = QHexEdit()
         self.remote_hexedit = QHexEdit()
+        self.client_hexedit.setOverwriteMode(False)
+        self.remote_hexedit.setOverwriteMode(False)
         self.client_hexedit_layout.addWidget(self.client_hexedit)
         self.remote_hexedit_layout.addWidget(self.remote_hexedit)
         self.client_hexedit.dataChanged.connect(self.update_client_data)
@@ -125,6 +127,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
             return
 
     def started(self):
+        self.client_data = bytes()
+        self.remote_data = bytes()
         self.go_button.setEnabled(False)
 
     def finished(self):
