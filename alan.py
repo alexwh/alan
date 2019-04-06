@@ -20,6 +20,8 @@ class TCPServer(QThread):
         self.remote_port = remote_port
         self.app = app
 
+        self.app.sig.send_data.connect(self.send_data)
+
     def __del__(self):
         self.wait()
 
@@ -33,13 +35,6 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading client data: {data}")
                     self.app.sig.recv_data.emit(data, "client")
-                    while self.app.client_intercept_checkbox.isChecked():
-                        time.sleep(0.1)
-
-                    logging.debug(f"sending client data to remote: {self.app.client_data}")
-                    if remote.send(self.app.client_data) <= 0:
-                        logging.debug("error sending to remote")
-                        break
                 else:
                     logging.debug("done with recv in client")
                     break
@@ -49,16 +44,22 @@ class TCPServer(QThread):
                 if data:
                     logging.debug(f"reading remote data: {data}")
                     self.app.sig.recv_data.emit(data, "remote")
-                    while self.app.remote_intercept_checkbox.isChecked():
-                        time.sleep(0.1)
-
-                    logging.debug(f"sending remote data to client: {self.app.remote_data}")
-                    if client.send(self.app.remote_data) <= 0:
-                        logging.debug("error sending to client")
-                        break
                 else:
                     logging.debug("done with recv in remote")
                     break
+
+    def send_data(self, data, direction):
+        if direction == "client":
+            sock = self.remote_conn
+        elif direction == "remote":
+            sock = self.client_conn
+        else:
+            return
+        logging.debug(f"sending {data} to {direction}")
+        if sock.send(data) <= 0:
+            logging.debug(f"error sending to {direction}")
+        # while self.app.remote_intercept_checkbox.isChecked():
+        #     time.sleep(0.1)
 
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,19 +71,20 @@ class TCPServer(QThread):
             return
 
         server.listen()
-        client_conn, addr = server.accept()
-        logging.info("recieved connection at {}:{}".format(*client_conn.getpeername()))
+        self.client_conn, addr = server.accept()
+        logging.info("recieved connection at {}:{}".format(*self.client_conn.getpeername()))
 
-        remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.remote_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         logging.info(f"connecting to remote: {self.remote_ip}:{self.remote_port}")
-        remote_conn.connect((self.remote_ip, self.remote_port))
+        self.remote_conn.connect((self.remote_ip, self.remote_port))
 
-        self._exchange_data(client_conn, remote_conn)
+        self._exchange_data(self.client_conn, self.remote_conn)
 
 
 class AlanSignal(QObject):
     handle_error = pyqtSignal(str, str, name='handle_error')
     recv_data = pyqtSignal(bytes, str, name='recv_data')
+    send_data = pyqtSignal(bytes, str, name='send_data')
 
 class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
     def __init__(self):
@@ -106,6 +108,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.sig.recv_data.connect(self.receive_data)
 
         self.go_button.clicked.connect(self.tcp_handle)
+        self.client_send_button.clicked.connect(self.send_client)
+        self.remote_send_button.clicked.connect(self.send_remote)
 
     def showerror(self, title, message, buttons=QtWidgets.QMessageBox.Ok):
         QtWidgets.QMessageBox.critical(self, title, message, buttons)
@@ -146,6 +150,12 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.tcp_server_thread.started.connect(self.started)
         self.tcp_server_thread.finished.connect(self.finished)
         self.tcp_server_thread.start()
+
+    def send_client(self):
+        self.sig.send_data.emit(bytes(self.client_hexedit.data()), "client")
+
+    def send_remote(self):
+        self.sig.send_data.emit(bytes(self.remote_hexedit.data()), "remote")
 
 
 def main():
