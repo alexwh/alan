@@ -27,9 +27,6 @@ class Ui_MainWindow(object):
         self.settings_layout.setContentsMargins(11, 11, 11, 11)
         self.settings_layout.setSpacing(6)
         self.settings_layout.setObjectName("settings_layout")
-        self.go_button = QtWidgets.QPushButton(self.settings_tab)
-        self.go_button.setObjectName("go_button")
-        self.settings_layout.addWidget(self.go_button, 3, 0, 1, 3)
         self.listen_ip = QtWidgets.QPlainTextEdit(self.settings_tab)
         self.listen_ip.setMaximumSize(QtCore.QSize(150, 32))
         self.listen_ip.setTabChangesFocus(True)
@@ -84,6 +81,9 @@ class Ui_MainWindow(object):
         self.remote_hexedit_layout.addWidget(self.remote_send_button, 0, 1, 1, 1)
         self.tabs.addTab(self.remote_hexedit_tab, "")
         self.central_layout.addWidget(self.tabs, 1, 0, 2, 1)
+        self.go_button = QtWidgets.QPushButton(self.centralWidget)
+        self.go_button.setObjectName("go_button")
+        self.central_layout.addWidget(self.go_button, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(MainWindow)
@@ -93,11 +93,10 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.go_button.setText(_translate("MainWindow", "go"))
         self.listen_ip.setPlainText(_translate("MainWindow", "127.0.0.1"))
         self.label_2.setText(_translate("MainWindow", "Remote IP"))
         self.listen_port.setPlainText(_translate("MainWindow", "10000"))
-        self.remote_port.setPlainText(_translate("MainWindow", "10001"))
+        self.remote_port.setPlainText(_translate("MainWindow", "8000"))
         self.remote_ip.setPlainText(_translate("MainWindow", "127.0.0.1"))
         self.label.setText(_translate("MainWindow", "Listen IP"))
         self.tabs.setTabText(self.tabs.indexOf(self.settings_tab), _translate("MainWindow", "Settings"))
@@ -107,5 +106,6 @@ class Ui_MainWindow(object):
         self.remote_intercept_checkbox.setText(_translate("MainWindow", "Intercept"))
         self.remote_send_button.setText(_translate("MainWindow", "Send Data"))
         self.tabs.setTabText(self.tabs.indexOf(self.remote_hexedit_tab), _translate("MainWindow", "Remote Data"))
+        self.go_button.setText(_translate("MainWindow", "go"))
 
 

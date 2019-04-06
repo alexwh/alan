@@ -25,13 +25,6 @@
         <string>Settings</string>
        </attribute>
        <layout class="QGridLayout" name="settings_layout">
-        <item row="3" column="0" colspan="3">
-         <widget class="QPushButton" name="go_button">
-          <property name="text">
-           <string>go</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <widget class="QPlainTextEdit" name="listen_ip">
           <property name="maximumSize">
@@ -83,7 +76,7 @@
            <bool>true</bool>
           </property>
           <property name="plainText">
-           <string>10001</string>
+           <string>8000</string>
           </property>
          </widget>
         </item>
@@ -154,6 +147,13 @@
         </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="go_button">
+      <property name="text">
+       <string>go</string>
+      </property>
      </widget>
     </item>
    </layout>
