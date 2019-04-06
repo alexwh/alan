@@ -96,6 +96,8 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.remote_hexedit = QHexEdit()
         self.client_hexedit.setOverwriteMode(False)
         self.remote_hexedit.setOverwriteMode(False)
+        self.client_hexedit.setReadOnly(True)
+        self.remote_hexedit.setReadOnly(True)
         self.client_hexedit_layout.addWidget(self.client_hexedit)
         self.remote_hexedit_layout.addWidget(self.remote_hexedit)
         self.client_hexedit.dataChanged.connect(self.update_client_data)
@@ -139,9 +141,11 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         if direction == "client":
             self.client_data += data
             self.client_hexedit.setData(self.client_data)
+            self.client_hexedit.setReadOnly(False)
         elif direction == "remote":
             self.remote_data += data
             self.remote_hexedit.setData(self.remote_data)
+            self.remote_hexedit.setReadOnly(False)
         else:
             logging.error("invalid direction in receive_data")
             return
@@ -159,9 +163,11 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.client_data = bytes()
         self.remote_data = bytes()
         self.go_button.setEnabled(False)
+        self.go_button.setText("running")
 
     def finished(self):
         self.go_button.setEnabled(True)
+        self.go_button.setText("go")
 
     def tcp_handle(self):
         local_ip = self.listen_ip.toPlainText()
@@ -177,10 +183,12 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.tcp_server_thread.start()
 
     def send_client(self):
+        self.client_hexedit.setReadOnly(True)
         self.sig.send_data.emit(bytes(self.client_hexedit.data()), "client")
 
     def send_remote(self):
         self.sig.send_data.emit(bytes(self.remote_hexedit.data()), "remote")
+        self.remote_hexedit.setReadOnly(True)
 
 
 def main():
