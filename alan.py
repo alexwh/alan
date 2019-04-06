@@ -6,7 +6,7 @@ import select
 import signal
 import time
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QThread, pyqtSignal, QObject
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QObject
 from qhexedit import QHexEdit
 
 import design
@@ -99,6 +99,7 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         self.remote_hexedit_layout.addWidget(self.remote_hexedit)
         self.client_hexedit.dataChanged.connect(self.update_client_data)
         self.remote_hexedit.dataChanged.connect(self.update_remote_data)
+        self.tabs.currentChanged.connect(self.tab_changed)
 
         self.client_data = bytes()
         self.remote_data = bytes()
@@ -116,9 +117,17 @@ class AlanApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
     def update_client_data(self):
         self.client_data = self.client_hexedit.data()
+        self.tabs.setTabText(self.tabs.indexOf(self.client_hexedit_tab), "Client Data (*)")
 
     def update_remote_data(self):
         self.remote_data = self.remote_hexedit.data()
+        self.tabs.setTabText(self.tabs.indexOf(self.remote_hexedit_tab), "Remote Data (*)")
+
+    def tab_changed(self, index):
+        if index == self.tabs.indexOf(self.client_hexedit_tab):
+            self.tabs.setTabText(index, "Client Data")
+        if index == self.tabs.indexOf(self.remote_hexedit_tab):
+            self.tabs.setTabText(index, "Remote Data")
 
     def receive_data(self, data, direction):
         if direction == "client":
